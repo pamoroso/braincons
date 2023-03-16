@@ -1,0 +1,209 @@
+(DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
+
+(FILECREATED "15-Mar-2023 11:27:50" {DSK}<home>medley>il>BRAINCONS.;30 10893  
+
+      :CHANGES-TO (RECORDS BRANCH)
+                  (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.PARSE.INSTRUCTION)
+
+      :PREVIOUS-DATE "11-Mar-2023 10:08:43" {DSK}<home>medley>il>BRAINCONS.;29)
+
+
+(PRETTYCOMPRINT BRAINCONSCOMS)
+
+(RPAQQ BRAINCONSCOMS ((RECORDS BRANCH BRC.ERROR BRC.PROGRAM)
+                      (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.PARSE BRC.PARSE.INSTRUCTION 
+                           BRC.VALIDATE.BRANCHES)
+                      (VARS (BRC.MAXIP 30000))))
+(DECLARE%: EVAL@COMPILE
+
+(RECORD BRANCH 
+
+         (* A branch instruction consisting of a MNEMONIC, the index ADDRESS in the 
+         instructions array, the DESTINATION address, and the SRCPTR index of the branch 
+         command in the source string.)
+
+               (MNEMONIC ADDRESS DESTINATION SRCPTR))
+
+(RECORD BRC.ERROR 
+
+         (* An error caused by REASON, a symbol, occurring at the SRCIDX character index 
+         in the source and at ADDRESS in the program, if applicable.)
+
+                  (REASON SRCIDX ADDRESS))
+
+(RECORD BRC.PROGRAM 
+
+         (* Intermediate program representation holding an array of INSTRUCTIONS, the 
+         index LASTIP of the last instruction in the array, a list of branch instructions, 
+         and a list of BRC.ERROR parse errors.)
+
+                    (INSTRUCTIONS LASTIP BRANCHES ERRORS))
+)
+(DEFINEQ
+
+(BRC.BRANCHP
+  [LAMBDA (INSTRUCTION)                                      (* ; "Edited 15-Mar-2023 11:25 by PA")
+                                                             (* ; "Edited 26-Feb-2023 09:03 by PA")
+                                                             (* Returns T if INSTRUCTION is a 
+                                                             branch instruction.)
+    (AND (LISTP INSTRUCTION)
+         (EQ (LENGTH INSTRUCTION)
+             4)
+         (LET ((MNEMONIC (fetch (BRANCH MNEMONIC) of INSTRUCTION)))
+              (AND (LITATOM MNEMONIC)
+                   (OR (EQ MNEMONIC 'JZ)
+                       (EQ MNEMONIC 'JNZ])
+
+(BRC.MAKE.JNZ
+  [LAMBDA (SRC.IDX ADDR PROGRAM)                             (* ; "Edited 15-Mar-2023 11:27 by PA")
+                                                             (* ; "Edited  4-Mar-2023 10:44 by PA")
+                                                             (* ; "Edited 26-Feb-2023 09:14 by PA")
+
+         (* Creates and returns the JNZ instruction at position SRC.IDX in the source 
+         string, taking care of backpatching the destination address of the matching JZ 
+         instruction and updating the branches and errors of PROGRAM.
+         Uses the free variable BRC.BRANCH.STACK.)
+
+    (LET ((JZ (pop BRC.BRANCH.STACK))
+          (INSTRUCTION (create BRANCH
+                              MNEMONIC _ 'JNZ
+                              ADDRESS _ ADDR
+                              SRCPTR _ SRC.IDX)))
+         (if (AND (BRC.BRANCHP JZ)
+                  (EQ (fetch (BRANCH MNEMONIC) of JZ)
+                      'JZ))
+             then (replace (BRANCH DESTINATION) of JZ with (ADD1 ADDR))
+                  (replace (BRANCH DESTINATION) of INSTRUCTION with (ADD1 (fetch (BRANCH ADDRESS)
+                                                                             of JZ)))
+           else (push (fetch (BRC.PROGRAM ERRORS) of PROGRAM)
+                      (create BRC.ERROR
+                             REASON _ 'UNMATCHEDBRANCH
+                             SRCIDX _ SRC.IDX
+                             ADDRESS _ ADDR)))
+         (push (fetch (BRC.PROGRAM BRANCHES) of PROGRAM)
+               INSTRUCTION)
+         INSTRUCTION])
+
+(BRC.MAKE.JZ
+  [LAMBDA (SRC.IDX ADDR PROGRAM)                             (* ; "Edited 15-Mar-2023 11:04 by PA")
+                                                             (* ; "Edited  4-Mar-2023 10:46 by PA")
+                                                             (* ; "Edited 25-Feb-2023 11:08 by PA")
+
+         (* Creates and returns the JZ instruction at position SRC.IDX in the source 
+         string #.(SEDIT::MAKE-BROKEN-ATOM ",") leaving the destination address 
+         unspecified at 0 for later backpatching and updating the branches of PROGRAM.
+         Uses the free variable BRC.BRANCH.STACK.)
+                                                             (* ; "Edited 25-Feb-2023 11:01 by PA")
+    (LET ((INST (create BRANCH
+                       MNEMONIC _ 'JZ
+                       ADDRESS _ ADDR
+                       DESTINATION _ 0
+                       SRCPTR _ SRC.IDX)))
+         (push BRC.BRANCH.STACK INST)
+         (push (fetch (BRC.PROGRAM BRANCHES) of PROGRAM)
+               INST)
+         INST])
+
+(BRC.PARSE
+  [LAMBDA (SOURCE)                                           (* ; "Edited 11-Mar-2023 09:21 by PA")
+                                                             (* ; "Edited  5-Mar-2023 10:46 by PA")
+                                                             (* ; "Edited 26-Feb-2023 09:13 by PA")
+                                                             (* ; "Edited 21-Feb-2023 10:49 by PA")
+                                                             (* ; "Edited 18-Feb-2023 11:26 by PA")
+                                                             (* ; "Edited  9-Feb-2023 10:19 by PA")
+                                                             (* ; "Edited  6-Feb-2023 08:55 by PA")
+
+         (* Parses the SOURCE string of a program and returns a BRC.PROGRAM record holding 
+         the internal representation of the program and its instructions.
+         Sets the ERRORS field of BRC.PROGRAM in case of parse errors, and also if SOURCE 
+         is null or has more instructions than available memory.
+         Binds the free variable BRC.BRANCH.STACK used by the called functions.)
+
+    (PROG ((LASTIDX (NCHARS SOURCE))
+           INST INSTS (ADDR 0)
+           BRC.BRANCH.STACK)
+
+         (* LASTIDX <= 0 Null source string, empty program.
+         LASTIDX > BRC.MAXIP More instructions than available memory)
+
+          (if (OR (ILEQ LASTIDX 0)
+                  (GREATERP LASTIDX BRC.MAXIP))
+              then (RETURN (create BRC.PROGRAM
+                                  ERRORS _ (LIST (BRC.MAKE.ERROR 'INVALIDMEMORY LASTIDX LASTIDX))
+                                  LASTIP _ 0)))
+          (SETQ INSTS (ARRAY LASTIDX 'POINTER))
+          (SETQ PARSED (create BRC.PROGRAM
+                              INSTRUCTIONS _ INSTS
+                              LASTIP _ 0))
+
+         (* ADDR hasn't been incremented yet to point to the current instruction when the 
+         loop condition is tested by calling BRC.PARSE.INSTRUCTION, so add 1 to the 
+         latter's argument address to account for this.)
+
+          (for CHRIDX from 1 to LASTIDX when (SETQ INST (BRC.PARSE.INSTRUCTION (SUBSTRING SOURCE 
+                                                                                      CHRIDX CHRIDX)
+                                                               CHRIDX
+                                                               (ADD1 ADDR)
+                                                               PARSED))
+             do (SETQ ADDR (ADD1 ADDR))
+                (SETA INSTS ADDR INST))
+          (replace (BRC.PROGRAM LASTIP) of PARSED with ADDR)
+          (BRC.VALIDATE.BRANCHES PARSED)                     (* SOURCE contains no instructions, 
+                                                             possibly only comments.)
+          [if (ILEQ ADDR 0)
+              then (replace (BRC.PROGRAM ERRORS) of PARSED with (LIST (BRC.MAKE.ERROR 'INVALIDMEMORY
+                                                                             LASTIDX ADDR]
+          (RETURN PARSED])
+
+(BRC.PARSE.INSTRUCTION
+  [LAMBDA (SRC.CHAR SRC.IDX ADDRESS PROGRAM)                 (* ; "Edited 15-Mar-2023 11:04 by PA")
+                                                             (* ; "Edited  4-Mar-2023 10:34 by PA")
+                                                             (* ; "Edited 26-Feb-2023 09:19 by PA")
+                                                             (* ; "Edited 21-Feb-2023 11:03 by PA")
+                                                             (* ; "Edited  9-Feb-2023 10:32 by PA")
+                                                             (* ; "Edited  5-Feb-2023 10:49 by PA")
+
+         (* Parses the single character string SRC.CHAR at index SRC.IDX of the source of 
+         PROGRAM and returns the corresponding instruction at ADDRESS, or NIL if the 
+         character is not recognized.)
+
+    (SELECTQ (MKATOM SRC.CHAR)
+        (> 'NEXT)
+        (< 'PREV)
+        (+ 'INC)
+        (- 'DEC)
+        (%. 'IN)
+        (%, 'OUT)
+        (%[ (BRC.MAKE.JZ SRC.IDX ADDRESS PROGRAM))
+        (%] (BRC.MAKE.JNZ SRC.IDX ADDRESS PROGRAM))
+        NIL])
+
+(BRC.VALIDATE.BRANCHES
+  [LAMBDA (PROGRAM)                                          (* ; "Edited 11-Mar-2023 10:02 by PA")
+
+         (* Checks for errors the branches of PROGRAM, adds any entries to the error list 
+         of PROGRAM, and returns the list of errors.)
+
+    (LET* [(BRANCHES (fetch (BRC.PROGRAM BRANCHES) of PROGRAM))
+           (LASTIP (fetch (BRC.PROGRAM LASTIP) of PROGRAM))
+           (ERRORS (for BRANCH in BRANCHES when (OR (LESSP (fetch (BRANCH DESTINATION) of BRANCH)
+                                                           1)
+                                                    (GREATERP (fetch (BRANCH DESTINATION)
+                                                                 of BRANCH)
+                                                           LASTIP))
+                      collect (create BRC.ERROR
+                                     REASON _ 'OUTOFBOUNDS
+                                     ADDRESS _ (fetch (BRANCH ADDRESS) of BRANCH]
+          (if ERRORS
+              then (replace (BRC.PROGRAM ERRORS) of PROGRAM with (APPEND (fetch (BRC.PROGRAM ERRORS)
+                                                                            of PROGRAM)
+                                                                        ERRORS)))
+          ERRORS])
+)
+
+(RPAQQ BRC.MAXIP 30000)
+(DECLARE%: DONTCOPY
+  (FILEMAP (NIL (1546 10841 (BRC.BRANCHP 1556 . 2250) (BRC.MAKE.JNZ 2252 . 3948) (BRC.MAKE.JZ 3950 . 
+5061) (BRC.PARSE 5063 . 8275) (BRC.PARSE.INSTRUCTION 8277 . 9442) (BRC.VALIDATE.BRANCHES 9444 . 10839)
+))))
+STOP
