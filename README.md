@@ -38,6 +38,12 @@ Call the parser function `BRC.PARSE` and pass it a source string representing a 
 The inspected record and its fields should look similar to the above screenshot.
 
 
+## Learn more
+
+* [Braincons project updates](https://journal.paoloamoroso.com/tag:braincons)
+* [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck)
+
+
 ## Author
 
 Braincons is developed by [Paolo Amoroso](https://github.com/pamoroso).
