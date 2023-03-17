@@ -4,7 +4,7 @@
 
 ![Braincons data structures.](https://raw.githubusercontent.com/pamoroso/braincons/main/braincons.png)
 
-It will eventually provide a minimal Brainfuck development environment with an editor and a display of the execution environment, the virtual machine memory, and its state.
+It will eventually provide a minimal Brainfuck development environment with an editor and an interactive visualization of the execution environment, the virtual machine memory, and its state.
 
 
 ## Status
