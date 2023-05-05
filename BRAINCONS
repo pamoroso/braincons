@@ -1,11 +1,13 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "15-Mar-2023 11:27:50" {DSK}<home>medley>il>BRAINCONS.;30 10893  
+(FILECREATED " 5-May-2023 07:08:12" {DSK}<home>medley>il>BRAINCONS.;31 11117  
 
-      :CHANGES-TO (RECORDS BRANCH)
-                  (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.PARSE.INSTRUCTION)
+      :EDIT-BY "PA"
 
-      :PREVIOUS-DATE "11-Mar-2023 10:08:43" {DSK}<home>medley>il>BRAINCONS.;29)
+      :CHANGES-TO (RECORDS BRANCH BRC.PROGRAM)
+                  (FNS BRC.PARSE)
+
+      :PREVIOUS-DATE "15-Mar-2023 11:27:50" {DSK}<home>medley>il>BRAINCONS.;30)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -35,9 +37,9 @@
 
          (* Intermediate program representation holding an array of INSTRUCTIONS, the 
          index LASTIP of the last instruction in the array, a list of branch instructions, 
-         and a list of BRC.ERROR parse errors.)
+         a list of BRC.ERROR parse errors, and the SOURCE code as a string.)
 
-                    (INSTRUCTIONS LASTIP BRANCHES ERRORS))
+                    (INSTRUCTIONS LASTIP BRANCHES ERRORS SOURCE))
 )
 (DEFINEQ
 
@@ -105,7 +107,8 @@
          INST])
 
 (BRC.PARSE
-  [LAMBDA (SOURCE)                                           (* ; "Edited 11-Mar-2023 09:21 by PA")
+  [LAMBDA (SOURCE)                                           (* ; "Edited  5-May-2023 06:59 by PA")
+                                                             (* ; "Edited 11-Mar-2023 09:21 by PA")
                                                              (* ; "Edited  5-Mar-2023 10:46 by PA")
                                                              (* ; "Edited 26-Feb-2023 09:13 by PA")
                                                              (* ; "Edited 21-Feb-2023 10:49 by PA")
@@ -130,11 +133,13 @@
                   (GREATERP LASTIDX BRC.MAXIP))
               then (RETURN (create BRC.PROGRAM
                                   ERRORS _ (LIST (BRC.MAKE.ERROR 'INVALIDMEMORY LASTIDX LASTIDX))
-                                  LASTIP _ 0)))
+                                  LASTIP _ 0
+                                  SOURCE _ SOURCE)))
           (SETQ INSTS (ARRAY LASTIDX 'POINTER))
           (SETQ PARSED (create BRC.PROGRAM
                               INSTRUCTIONS _ INSTS
-                              LASTIP _ 0))
+                              LASTIP _ 0
+                              SOURCE _ SOURCE))
 
          (* ADDR hasn't been incremented yet to point to the current instruction when the 
          loop condition is tested by calling BRC.PARSE.INSTRUCTION, so add 1 to the 
@@ -203,7 +208,7 @@
 
 (RPAQQ BRC.MAXIP 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (1546 10841 (BRC.BRANCHP 1556 . 2250) (BRC.MAKE.JNZ 2252 . 3948) (BRC.MAKE.JZ 3950 . 
-5061) (BRC.PARSE 5063 . 8275) (BRC.PARSE.INSTRUCTION 8277 . 9442) (BRC.VALIDATE.BRANCHES 9444 . 10839)
+  (FILEMAP (NIL (1566 11065 (BRC.BRANCHP 1576 . 2270) (BRC.MAKE.JNZ 2272 . 3968) (BRC.MAKE.JZ 3970 . 
+5081) (BRC.PARSE 5083 . 8499) (BRC.PARSE.INSTRUCTION 8501 . 9666) (BRC.VALIDATE.BRANCHES 9668 . 11063)
 ))))
 STOP
