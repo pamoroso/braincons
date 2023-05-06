@@ -1,21 +1,24 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED " 5-May-2023 07:08:12" {DSK}<home>medley>il>BRAINCONS.;31 11117  
+(FILECREATED " 6-May-2023 10:24:36" {DSK}<home>medley>il>BRAINCONS.;32 13709  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (RECORDS BRANCH BRC.PROGRAM)
-                  (FNS BRC.PARSE)
+      :CHANGES-TO (VARS BRAINCONSCOMS)
+                  (RECORDS BRC.VM)
+                  (FNS BRC.VM.RESET BRC.VM.RUN BRC.VM.LOAD BRC.MAKE.VM)
 
-      :PREVIOUS-DATE "15-Mar-2023 11:27:50" {DSK}<home>medley>il>BRAINCONS.;30)
+      :PREVIOUS-DATE " 5-May-2023 07:08:12" {DSK}<home>medley>il>BRAINCONS.;31)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
 
-(RPAQQ BRAINCONSCOMS ((RECORDS BRANCH BRC.ERROR BRC.PROGRAM)
-                      (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.PARSE BRC.PARSE.INSTRUCTION 
-                           BRC.VALIDATE.BRANCHES)
-                      (VARS (BRC.MAXIP 30000))))
+(RPAQQ BRAINCONSCOMS ((RECORDS BRANCH BRC.ERROR BRC.PROGRAM BRC.VM)
+                      (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.MAKE.VM BRC.PARSE 
+                           BRC.PARSE.INSTRUCTION BRC.VALIDATE.BRANCHES BRC.VM.LOAD BRC.VM.RESET 
+                           BRC.VM.RUN)
+                      (VARS (BRC.MAXIP 30000))
+                      (INITVARS (BRC.MEMSIZE 30000))))
 (DECLARE%: EVAL@COMPILE
 
 (RECORD BRANCH 
@@ -40,6 +43,23 @@
          a list of BRC.ERROR parse errors, and the SOURCE code as a string.)
 
                     (INSTRUCTIONS LASTIP BRANCHES ERRORS SOURCE))
+
+(RECORD BRC.VM 
+
+         (* A record representing a Brainfuck Virtual Machine that holds the main memory, 
+         I/O streams, and a program. #.(SEDIT::MAKE-BROKEN-ATOM "PROGRAM:") program, a 
+         BRC.PROGRAM; #.(SEDIT::MAKE-BROKEN-ATOM "IP:") program counter, the address of 
+         the next instruction; #.(SEDIT::MAKE-BROKEN-ATOM "MEMORY:") 0-based array of 
+         BRC.MEMSIZE memory cells holding 8-bit values;
+         #.(SEDIT::MAKE-BROKEN-ATOM "DATAPTR:") index of the memory cell the next 
+         instruction acts on; #.(SEDIT::MAKE-BROKEN-ATOM "STATE:") the state of the VM, 
+         one of READY %(ready to load or run a program, or after program execution 
+         terminated with no errors%) or a BRC.ERROR describing a runtime error;
+         #.(SEDIT::MAKE-BROKEN-ATOM "IN:") stream to get program input, NIL by default;
+         #.(SEDIT::MAKE-BROKEN-ATOM "OUT:") stream to display program output, NIL by 
+         default.)
+
+               (PROGRAM IP MEMORY DATAPTR STATE IN OUT))
 )
 (DEFINEQ
 
@@ -105,6 +125,14 @@
          (push (fetch (BRC.PROGRAM BRANCHES) of PROGRAM)
                INST)
          INST])
+
+(BRC.MAKE.VM
+  [LAMBDA NIL                                                (* ; "Edited  6-May-2023 10:10 by PA")
+
+         (* Creates a VM. Returns the new VM with memory initialized to null bytes and no 
+         program loaded.)
+
+    ])
 
 (BRC.PARSE
   [LAMBDA (SOURCE)                                           (* ; "Edited  5-May-2023 06:59 by PA")
@@ -204,11 +232,41 @@
                                                                             of PROGRAM)
                                                                         ERRORS)))
           ERRORS])
+
+(BRC.VM.LOAD
+  [LAMBDA (VM PROGRAM)                                       (* ; "Edited  6-May-2023 10:13 by PA")
+
+         (* Loads PROGRAM into VM and prepares the machine to start the program.
+         PROGRAM is a BRC.PROGRAM. Returns VM.)
+
+    ])
+
+(BRC.VM.RESET
+  [LAMBDA (VM CLEARPROG)                                     (* ; "Edited  6-May-2023 10:21 by PA")
+
+         (* Clears the memory of VM to null bytes, and deletes any stored program if 
+         CLEARPROG is T instead of the default NIL.
+         VM is initialized to restart the program or load a new one if CLEARPROG is T.
+         Returns VM.)
+
+    ])
+
+(BRC.VM.RUN
+  [LAMBDA (VM STEPS)                                         (* ; "Edited  6-May-2023 10:16 by PA")
+
+         (* VM runs the program until the end if STEPS is NIL or executes the next STEPS 
+         instructions. If STEPS is T executes one instruction.
+         A runtime error terminates the program. Returns VM.)
+
+    ])
 )
 
 (RPAQQ BRC.MAXIP 30000)
+
+(RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (1566 11065 (BRC.BRANCHP 1576 . 2270) (BRC.MAKE.JNZ 2272 . 3968) (BRC.MAKE.JZ 3970 . 
-5081) (BRC.PARSE 5083 . 8499) (BRC.PARSE.INSTRUCTION 8501 . 9666) (BRC.VALIDATE.BRANCHES 9668 . 11063)
-))))
+  (FILEMAP (NIL (2835 13626 (BRC.BRANCHP 2845 . 3539) (BRC.MAKE.JNZ 3541 . 5237) (BRC.MAKE.JZ 5239 . 
+6350) (BRC.MAKE.VM 6352 . 6610) (BRC.PARSE 6612 . 10028) (BRC.PARSE.INSTRUCTION 10030 . 11195) (
+BRC.VALIDATE.BRANCHES 11197 . 12592) (BRC.VM.LOAD 12594 . 12864) (BRC.VM.RESET 12866 . 13263) (
+BRC.VM.RUN 13265 . 13624)))))
 STOP
