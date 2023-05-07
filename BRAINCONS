@@ -1,12 +1,12 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED " 7-May-2023 05:56:21" {DSK}<home>medley>il>BRAINCONS.;34 14868  
+(FILECREATED " 7-May-2023 10:39:34" {DSK}<home>medley>il>BRAINCONS.;35 15927  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (VARS BRAINCONSCOMS)
+      :CHANGES-TO (FNS BRC.MAKE.VM BRC.VM.LOAD BRC.VM.RESET)
 
-      :PREVIOUS-DATE " 6-May-2023 12:09:14" {DSK}<home>medley>il>BRAINCONS.;33)
+      :PREVIOUS-DATE " 7-May-2023 05:56:21" {DSK}<home>medley>il>BRAINCONS.;34)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -143,12 +143,19 @@
          INST])
 
 (BRC.MAKE.VM
-  [LAMBDA NIL                                                (* ; "Edited  6-May-2023 10:10 by PA")
+  [LAMBDA NIL                                                (* ; "Edited  7-May-2023 10:09 by PA")
 
          (* Creates a VM. Returns the new VM with memory initialized to null bytes and no 
          program loaded.)
 
-    ])
+    (create BRC.VM
+           PROGRAM _ NIL
+           IP _ 1
+           MEMORY _ (ARRAY BRC.MEMSIZE 'SMALLP 0 0)
+           DATAPTR _ 0
+           STATE _ 'READY
+           IN _ NIL
+           OUT _ NIL])
 
 (BRC.PARSE
   [LAMBDA (SOURCE)                                           (* ; "Edited  5-May-2023 06:59 by PA")
@@ -250,22 +257,34 @@
           ERRORS])
 
 (BRC.VM.LOAD
-  [LAMBDA (VM PROGRAM)                                       (* ; "Edited  6-May-2023 10:13 by PA")
+  [LAMBDA (VM PROGRAM)                                       (* ; "Edited  7-May-2023 10:14 by PA")
+                                                             (* ; "Edited  6-May-2023 10:13 by PA")
 
          (* Loads PROGRAM into VM and prepares the machine to start the program.
          PROGRAM is a BRC.PROGRAM. Returns VM.)
 
-    ])
+    (replace (BRC.VM PROGRAM) of VM with PROGRAM)
+    (replace (BRC.VM IP) of VM with 1)
+    (replace (BRC.VM STATE) of VM with 'READY)
+    VM])
 
 (BRC.VM.RESET
-  [LAMBDA (VM CLEARPROG)                                     (* ; "Edited  6-May-2023 10:21 by PA")
+  [LAMBDA (VM CLEARPROG)                                     (* ; "Edited  7-May-2023 10:37 by PA")
+                                                             (* ; "Edited  6-May-2023 10:21 by PA")
 
          (* Clears the memory of VM to null bytes, and deletes any stored program if 
          CLEARPROG is T instead of the default NIL.
-         VM is initialized to restart the program or load a new one if CLEARPROG is T.
+         VM is initialized to restart the program, or load a new one if CLEARPROG is T.
          Returns VM.)
 
-    ])
+    (for MEMPTR from 0 to (IMINUS BRC.MEMSIZE 1) do (SETA (fetch (BRC.VM MEMORY) of VM)
+                                                          MEMPTR 0))
+    (replace (BRC.VM IP) of VM with 1)
+    (replace (BRC.VM DATAPTR) of VM with 0)
+    (replace (BRC.VM STATE) of VM with 'READY)
+    (if CLEARPROG
+        then (replace (BRC.VM PROGRAM) of VM with NIL))
+    VM])
 
 (BRC.VM.RUN
   [LAMBDA (VM STEPS)                                         (* ; "Edited  6-May-2023 10:16 by PA")
@@ -281,8 +300,8 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (3994 14785 (BRC.BRANCHP 4004 . 4698) (BRC.MAKE.JNZ 4700 . 6396) (BRC.MAKE.JZ 6398 . 
-7509) (BRC.MAKE.VM 7511 . 7769) (BRC.PARSE 7771 . 11187) (BRC.PARSE.INSTRUCTION 11189 . 12354) (
-BRC.VALIDATE.BRANCHES 12356 . 13751) (BRC.VM.LOAD 13753 . 14023) (BRC.VM.RESET 14025 . 14422) (
-BRC.VM.RUN 14424 . 14783)))))
+  (FILEMAP (NIL (4016 15844 (BRC.BRANCHP 4026 . 4720) (BRC.MAKE.JNZ 4722 . 6418) (BRC.MAKE.JZ 6420 . 
+7531) (BRC.MAKE.VM 7533 . 7994) (BRC.PARSE 7996 . 11412) (BRC.PARSE.INSTRUCTION 11414 . 12579) (
+BRC.VALIDATE.BRANCHES 12581 . 13976) (BRC.VM.LOAD 13978 . 14530) (BRC.VM.RESET 14532 . 15481) (
+BRC.VM.RUN 15483 . 15842)))))
 STOP
