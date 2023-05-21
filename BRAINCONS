@@ -1,12 +1,13 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED " 7-May-2023 10:39:34" {DSK}<home>medley>il>BRAINCONS.;35 15927  
+(FILECREATED "21-May-2023 09:02:14" {DSK}<home>medley>il>BRAINCONS.;42 19282  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (FNS BRC.MAKE.VM BRC.VM.LOAD BRC.VM.RESET)
+      :CHANGES-TO (FNS BRC.MAKE.VM BRC.VM.RUN BRC.VM.INCDEC)
+                  (VARS BRAINCONSCOMS)
 
-      :PREVIOUS-DATE " 7-May-2023 05:56:21" {DSK}<home>medley>il>BRAINCONS.;34)
+      :PREVIOUS-DATE "20-May-2023 09:00:37" {DSK}<home>medley>il>BRAINCONS.;41)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -14,7 +15,7 @@
 (RPAQQ BRAINCONSCOMS
        ((RECORDS BRANCH BRC.ERROR BRC.PROGRAM BRC.VM)
         (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.MAKE.VM BRC.PARSE BRC.PARSE.INSTRUCTION 
-             BRC.VALIDATE.BRANCHES BRC.VM.LOAD BRC.VM.RESET BRC.VM.RUN)
+             BRC.VALIDATE.BRANCHES BRC.VM.INCDEC BRC.VM.LOAD BRC.VM.RESET BRC.VM.RUN)
         (VARS (BRC.MAXIP 30000)
               (* Maximum number of instructions in a program.))
         (INITVARS (BRC.MEMSIZE 30000)
@@ -143,7 +144,8 @@
          INST])
 
 (BRC.MAKE.VM
-  [LAMBDA NIL                                                (* ; "Edited  7-May-2023 10:09 by PA")
+  [LAMBDA NIL                                                (* ; "Edited 21-May-2023 08:54 by PA")
+                                                             (* ; "Edited  7-May-2023 10:09 by PA")
 
          (* Creates a VM. Returns the new VM with memory initialized to null bytes and no 
          program loaded.)
@@ -151,7 +153,7 @@
     (create BRC.VM
            PROGRAM _ NIL
            IP _ 1
-           MEMORY _ (ARRAY BRC.MEMSIZE 'SMALLP 0 0)
+           MEMORY _ (ARRAY BRC.MEMSIZE 'FIXP 0 0)
            DATAPTR _ 0
            STATE _ 'READY
            IN _ NIL
@@ -256,6 +258,29 @@
                                                                         ERRORS)))
           ERRORS])
 
+(BRC.VM.INCDEC
+  [LAMBDA (VM OPCODE)                                        (* ; "Edited 21-May-2023 08:57 by PA")
+
+         (* Executes the INC or DEC instruction of the Brainfuck program in virtual 
+         machine VM depending on the corresponding symbol OPCODE.
+         Doesn't generate runtime errors. Returns VM.)
+
+    (LET* ((CURVAL (ELT (fetch (BRC.VM MEMORY) of VM)
+                        (fetch (BRC.VM DATAPTR) of VM)))
+           (NEWVAL (SELECTQ OPCODE
+                       (INC (ADD1 CURVAL))
+                       (DEC (SUB1 CURVAL))
+                       CURVAL)))
+          (SETA (fetch (BRC.VM MEMORY) of VM)
+                (fetch (BRC.VM DATAPTR) of VM)
+                (COND
+                   ((GREATERP NEWVAL 127)
+                    -128)
+                   ((LESSP NEWVAL -128)
+                    127)
+                   (T NEWVAL)))
+          VM])
+
 (BRC.VM.LOAD
   [LAMBDA (VM PROGRAM)                                       (* ; "Edited  7-May-2023 10:14 by PA")
                                                              (* ; "Edited  6-May-2023 10:13 by PA")
@@ -269,7 +294,8 @@
     VM])
 
 (BRC.VM.RESET
-  [LAMBDA (VM CLEARPROG)                                     (* ; "Edited  7-May-2023 10:37 by PA")
+  [LAMBDA (VM CLEARPROG)                                     (* ; "Edited 20-May-2023 08:59 by PA")
+                                                             (* ; "Edited  7-May-2023 10:37 by PA")
                                                              (* ; "Edited  6-May-2023 10:21 by PA")
 
          (* Clears the memory of VM to null bytes, and deletes any stored program if 
@@ -277,8 +303,8 @@
          VM is initialized to restart the program, or load a new one if CLEARPROG is T.
          Returns VM.)
 
-    (for MEMPTR from 0 to (IMINUS BRC.MEMSIZE 1) do (SETA (fetch (BRC.VM MEMORY) of VM)
-                                                          MEMPTR 0))
+    (bind (MEMORY _ (fetch (BRC.VM MEMORY) of VM)) for MEMPTR from 0 to (SUB1 BRC.MEMSIZE)
+       do (SETA MEMORY MEMPTR 0))
     (replace (BRC.VM IP) of VM with 1)
     (replace (BRC.VM DATAPTR) of VM with 0)
     (replace (BRC.VM STATE) of VM with 'READY)
@@ -287,21 +313,56 @@
     VM])
 
 (BRC.VM.RUN
-  [LAMBDA (VM STEPS)                                         (* ; "Edited  6-May-2023 10:16 by PA")
+  [LAMBDA (VM STEPS)                                         (* ; "Edited 21-May-2023 08:38 by PA")
+                                                             (* ; "Edited 14-May-2023 10:04 by PA")
+                                                             (* ; "Edited  6-May-2023 10:16 by PA")
 
          (* VM runs the program until the end if STEPS is NIL or executes the next STEPS 
-         instructions. If STEPS is T executes one instruction.
-         A runtime error terminates the program. Returns VM.)
+         instructions. A runtime error terminates the program.
+         Returns VM.)
 
-    ])
+    (LET* [(PROGRAM (fetch (BRC.VM PROGRAM) of VM))
+           (ENDIDX (fetch (BRC.PROGRAM LASTIP) of PROGRAM))
+           (MAXSTEPS (if STEPS
+                         then (MIN STEPS ENDIDX]
+          (bind (I _ 1)
+                (MNEMONIC _ NIL)
+                (PC _ 1) while (OR (AND (NULL STEPS)
+                                        (LEQ (fetch (BRC.VM IP) of VM)
+                                             ENDIDX))
+                                   (AND STEPS (LEQ I MAXSTEPS)))
+             do (SETQ INSTRUCTION (ELT (fetch (BRC.PROGRAM INSTRUCTIONS) of PROGRAM)
+                                       (fetch (BRC.VM IP) of VM)))
+                (SETQ MNEMONIC (if (LITATOM INSTRUCTION)
+                                   then INSTRUCTION
+                                 else (fetch (BRANCH MNEMONIC) of INSTRUCTION)))
+                (SETQ PC (fetch (BRC.VM IP) of VM))
+                (PRINTOUT T "I:" %, I %, "MAXSTEPS" %, MAXSTEPS %, "IP:" %, PC %, "ENDIDX:" %, ENDIDX
+                       %, "MNEMONIC:" %, .PPV MNEMONIC T)
+                (SELECTQ MNEMONIC
+                    (NEXT (PRINTOUT T "Executing" %, MNEMONIC T))
+                    (PREV (PRINTOUT T "Executing" %, MNEMONIC T))
+                    (INC (PRINTOUT T "Executing" %, MNEMONIC T)
+                         (BRC.VM.INCDEC VM 'INC))
+                    (DEC (PRINTOUT T "Executing" %, MNEMONIC T)
+                         (BRC.VM.INCDEC VM 'DEC))
+                    (IN (PRINTOUT T "Executing" %, MNEMONIC T))
+                    (OUT (PRINTOUT T "Executing" %, MNEMONIC T))
+                    (JZ (PRINTOUT T "Executing" %, MNEMONIC T))
+                    (JNZ (PRINTOUT T "Executing" %, MNEMONIC T))
+                    NIL)
+                (if (AND STEPS (LEQ I MAXSTEPS))
+                    then (SETQ I (ADD1 I)))
+                (replace (BRC.VM IP) of VM with (ADD1 PC)))
+          VM])
 )
 
 (RPAQQ BRC.MAXIP 30000)
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4016 15844 (BRC.BRANCHP 4026 . 4720) (BRC.MAKE.JNZ 4722 . 6418) (BRC.MAKE.JZ 6420 . 
-7531) (BRC.MAKE.VM 7533 . 7994) (BRC.PARSE 7996 . 11412) (BRC.PARSE.INSTRUCTION 11414 . 12579) (
-BRC.VALIDATE.BRANCHES 12581 . 13976) (BRC.VM.LOAD 13978 . 14530) (BRC.VM.RESET 14532 . 15481) (
-BRC.VM.RUN 15483 . 15842)))))
+  (FILEMAP (NIL (4069 19199 (BRC.BRANCHP 4079 . 4773) (BRC.MAKE.JNZ 4775 . 6471) (BRC.MAKE.JZ 6473 . 
+7584) (BRC.MAKE.VM 7586 . 8153) (BRC.PARSE 8155 . 11571) (BRC.PARSE.INSTRUCTION 11573 . 12738) (
+BRC.VALIDATE.BRANCHES 12740 . 14135) (BRC.VM.INCDEC 14137 . 15075) (BRC.VM.LOAD 15077 . 15629) (
+BRC.VM.RESET 15631 . 16660) (BRC.VM.RUN 16662 . 19197)))))
 STOP
