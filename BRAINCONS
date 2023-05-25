@@ -1,13 +1,12 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "24-May-2023 10:22:55" {DSK}<home>medley>il>BRAINCONS.;44 21067  
+(FILECREATED "25-May-2023 03:07:01" {DSK}<home>medley>il>BRAINCONS.;45 21169  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (FNS BRC.VM.RUN BRC.VM.PREVNEXT)
-                  (VARS BRAINCONSCOMS)
+      :CHANGES-TO (FNS BRC.VALIDATE.BRANCHES BRC.VM.PREVNEXT)
 
-      :PREVIOUS-DATE "24-May-2023 09:08:56" {DSK}<home>medley>il>BRAINCONS.;43)
+      :PREVIOUS-DATE "24-May-2023 10:22:55" {DSK}<home>medley>il>BRAINCONS.;44)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -237,10 +236,11 @@
         NIL])
 
 (BRC.VALIDATE.BRANCHES
-  [LAMBDA (PROGRAM)                                          (* ; "Edited 11-Mar-2023 10:02 by PA")
+  [LAMBDA (PROGRAM)                                          (* ; "Edited 25-May-2023 03:06 by PA")
+                                                             (* ; "Edited 11-Mar-2023 10:02 by PA")
 
-         (* Checks for errors the branches of PROGRAM, adds any entries to the error list 
-         of PROGRAM, and returns the list of errors.)
+         (* Checks for errors the branches of PROGRAM, adds any IPOUTOFBOUNDS entries to 
+         the error list of PROGRAM, and returns the list of errors.)
 
     (LET* [(BRANCHES (fetch (BRC.PROGRAM BRANCHES) of PROGRAM))
            (LASTIP (fetch (BRC.PROGRAM LASTIP) of PROGRAM))
@@ -250,7 +250,7 @@
                                                                  of BRANCH)
                                                            LASTIP))
                       collect (create BRC.ERROR
-                                     REASON _ 'OUTOFBOUNDS
+                                     REASON _ 'IPOUTOFBOUNDS
                                      ADDRESS _ (fetch (BRANCH ADDRESS) of BRANCH]
           (if ERRORS
               then (replace (BRC.PROGRAM ERRORS) of PROGRAM with (APPEND (fetch (BRC.PROGRAM ERRORS)
@@ -294,12 +294,12 @@
     VM])
 
 (BRC.VM.PREVNEXT
-  [LAMBDA (VM OPCODE)                                        (* ; "Edited 24-May-2023 10:12 by PA")
+  [LAMBDA (VM OPCODE)                                        (* ; "Edited 25-May-2023 03:06 by PA")
 
          (* Executes the PREV or NEXT instruction of the Brainfuck program in virtual 
          machine VM depending on the corresponding OPCODE.
-         Generates OUTOFBOUNDS error if the memory pointer ends up pointing outside of the 
-         memory space. Returns VM.)
+         Generates MEMOUTOFBOUNDS error if the memory pointer ends up pointing outside of 
+         the memory space. Returns VM.)
 
     (LET* ((CURPTR (fetch (BRC.VM DATAPTR) of VM))
            (NEWPTR (SELECTQ OPCODE
@@ -310,7 +310,7 @@
                    (LEQ NEWPTR BRC.MEMSIZE))
               then (replace (BRC.VM DATAPTR) of VM with NEWPTR)
             else (replace (BRC.VM STATE) of VM with (create BRC.ERROR
-                                                           REASON _ 'OUTOFBOUNDS
+                                                           REASON _ 'MEMOUTOFBOUNDS
                                                            ADDRESS _ NEWPTR)))
           VM])
 
@@ -393,8 +393,8 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4075 20984 (BRC.BRANCHP 4085 . 4779) (BRC.MAKE.JNZ 4781 . 6477) (BRC.MAKE.JZ 6479 . 
-7590) (BRC.MAKE.VM 7592 . 8159) (BRC.PARSE 8161 . 11577) (BRC.PARSE.INSTRUCTION 11579 . 12744) (
-BRC.VALIDATE.BRANCHES 12746 . 14141) (BRC.VM.INCDEC 14143 . 15081) (BRC.VM.LOAD 15083 . 15635) (
-BRC.VM.PREVNEXT 15637 . 16700) (BRC.VM.RESET 16702 . 17731) (BRC.VM.RUN 17733 . 20982)))))
+  (FILEMAP (NIL (4047 21086 (BRC.BRANCHP 4057 . 4751) (BRC.MAKE.JNZ 4753 . 6449) (BRC.MAKE.JZ 6451 . 
+7562) (BRC.MAKE.VM 7564 . 8131) (BRC.PARSE 8133 . 11549) (BRC.PARSE.INSTRUCTION 11551 . 12716) (
+BRC.VALIDATE.BRANCHES 12718 . 14237) (BRC.VM.INCDEC 14239 . 15177) (BRC.VM.LOAD 15179 . 15731) (
+BRC.VM.PREVNEXT 15733 . 16802) (BRC.VM.RESET 16804 . 17833) (BRC.VM.RUN 17835 . 21084)))))
 STOP
