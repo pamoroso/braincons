@@ -1,12 +1,13 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "25-May-2023 03:07:01" {DSK}<home>medley>il>BRAINCONS.;45 21169  
+(FILECREATED "25-May-2023 09:18:26" {DSK}<home>medley>il>BRAINCONS.;46 22483  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (FNS BRC.VALIDATE.BRANCHES BRC.VM.PREVNEXT)
+      :CHANGES-TO (FNS BRC.VM.RUN BRC.VM.BRANCH)
+                  (VARS BRAINCONSCOMS)
 
-      :PREVIOUS-DATE "24-May-2023 10:22:55" {DSK}<home>medley>il>BRAINCONS.;44)
+      :PREVIOUS-DATE "25-May-2023 03:07:01" {DSK}<home>medley>il>BRAINCONS.;45)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -14,7 +15,8 @@
 (RPAQQ BRAINCONSCOMS
        ((RECORDS BRANCH BRC.ERROR BRC.PROGRAM BRC.VM)
         (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.MAKE.VM BRC.PARSE BRC.PARSE.INSTRUCTION 
-             BRC.VALIDATE.BRANCHES BRC.VM.INCDEC BRC.VM.LOAD BRC.VM.PREVNEXT BRC.VM.RESET BRC.VM.RUN)
+             BRC.VALIDATE.BRANCHES BRC.VM.BRANCH BRC.VM.INCDEC BRC.VM.LOAD BRC.VM.PREVNEXT 
+             BRC.VM.RESET BRC.VM.RUN)
         (VARS (BRC.MAXIP 30000)
               (* Maximum number of instructions in a program.))
         (INITVARS (BRC.MEMSIZE 30000)
@@ -258,6 +260,25 @@
                                                                         ERRORS)))
           ERRORS])
 
+(BRC.VM.BRANCH
+  [LAMBDA (VM BRANCH)                                        (* ; "Edited 25-May-2023 09:07 by PA")
+
+         (* Executes the JZ or JNZ instruction of the Brainfuck program in virtual machine 
+         VM depending on the type of BRANCH. Generates IPOUTOFBOUNDS error if the 
+         machine's IP ends up pointing to an address beyond the program.
+         Returns VM.)
+
+    (LET ((NEWIP (fetch (BRANCH DESTINATION) of BRANCH)))
+         (if [AND (GEQ NEWIP 0)
+                  (LEQ NEWIP (fetch (BRC.PROGRAM LASTIP) of (fetch (VM PROGRAM) of VM]
+             then (*The fetch-decode-execute cycle will increment IP by 1, so we account for this by
+                        subtracting 1 to the destination address.)
+                  (replace (BRC.VM IP) of VM with (SUB1 NEWIP))
+           else (replace (BRC.VM STATE) of VM with (create BRC.ERROR
+                                                          REASON _ 'IPOUTOFBOUNDS
+                                                          ADDRESS _ NEWIP)))
+         VM])
+
 (BRC.VM.INCDEC
   [LAMBDA (VM OPCODE)                                        (* ; "Edited 21-May-2023 08:57 by PA")
 
@@ -334,7 +355,7 @@
     VM])
 
 (BRC.VM.RUN
-  [LAMBDA (VM STEPS)                                         (* ; "Edited 24-May-2023 10:14 by PA")
+  [LAMBDA (VM STEPS)                                         (* ; "Edited 25-May-2023 09:11 by PA")
                                                              (* ; "Edited 21-May-2023 08:38 by PA")
                                                              (* ; "Edited 14-May-2023 10:04 by PA")
                                                              (* ; "Edited  6-May-2023 10:16 by PA")
@@ -380,8 +401,10 @@
                               (BRC.VM.INCDEC VM 'DEC))
                          (IN (PRINTOUT T "Executing" %, MNEMONIC T))
                          (OUT (PRINTOUT T "Executing" %, MNEMONIC T))
-                         (JZ (PRINTOUT T "Executing" %, MNEMONIC T))
-                         (JNZ (PRINTOUT T "Executing" %, MNEMONIC T))
+                         (JZ (PRINTOUT T "Executing" %, MNEMONIC T)
+                             (BRC.VM.BRANCH VM INSTRUCTION))
+                         (JNZ (PRINTOUT T "Executing" %, MNEMONIC T)
+                              (BRC.VM.BRANCH VM INSTRUCTION))
                          NIL)
                      (if (AND STEPS (LEQ I MAXSTEPS))
                          then (SETQ I (ADD1 I)))
@@ -393,8 +416,9 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4047 21086 (BRC.BRANCHP 4057 . 4751) (BRC.MAKE.JNZ 4753 . 6449) (BRC.MAKE.JZ 6451 . 
-7562) (BRC.MAKE.VM 7564 . 8131) (BRC.PARSE 8133 . 11549) (BRC.PARSE.INSTRUCTION 11551 . 12716) (
-BRC.VALIDATE.BRANCHES 12718 . 14237) (BRC.VM.INCDEC 14239 . 15177) (BRC.VM.LOAD 15179 . 15731) (
-BRC.VM.PREVNEXT 15733 . 16802) (BRC.VM.RESET 16804 . 17833) (BRC.VM.RUN 17835 . 21084)))))
+  (FILEMAP (NIL (4101 22400 (BRC.BRANCHP 4111 . 4805) (BRC.MAKE.JNZ 4807 . 6503) (BRC.MAKE.JZ 6505 . 
+7616) (BRC.MAKE.VM 7618 . 8185) (BRC.PARSE 8187 . 11603) (BRC.PARSE.INSTRUCTION 11605 . 12770) (
+BRC.VALIDATE.BRANCHES 12772 . 14291) (BRC.VM.BRANCH 14293 . 15422) (BRC.VM.INCDEC 15424 . 16362) (
+BRC.VM.LOAD 16364 . 16916) (BRC.VM.PREVNEXT 16918 . 17987) (BRC.VM.RESET 17989 . 19018) (BRC.VM.RUN 
+19020 . 22398)))))
 STOP
