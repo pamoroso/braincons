@@ -1,12 +1,13 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "26-May-2023 04:51:26" {DSK}<home>medley>il>BRAINCONS.;47 22943  
+(FILECREATED "26-May-2023 07:13:12" {DSK}<home>medley>il>BRAINCONS.;48 23189  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (FNS BRC.VM.BRANCH BRC.VM.RUN)
+      :CHANGES-TO (FNS BRC.VM.RUN BRC.VM.OUT)
+                  (VARS BRAINCONSCOMS)
 
-      :PREVIOUS-DATE "25-May-2023 09:18:26" {DSK}<home>medley>il>BRAINCONS.;46)
+      :PREVIOUS-DATE "26-May-2023 04:51:26" {DSK}<home>medley>il>BRAINCONS.;47)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -14,7 +15,7 @@
 (RPAQQ BRAINCONSCOMS
        ((RECORDS BRANCH BRC.ERROR BRC.PROGRAM BRC.VM)
         (FNS BRC.BRANCHP BRC.MAKE.JNZ BRC.MAKE.JZ BRC.MAKE.VM BRC.PARSE BRC.PARSE.INSTRUCTION 
-             BRC.VALIDATE.BRANCHES BRC.VM.BRANCH BRC.VM.INCDEC BRC.VM.LOAD BRC.VM.PREVNEXT 
+             BRC.VALIDATE.BRANCHES BRC.VM.BRANCH BRC.VM.INCDEC BRC.VM.LOAD BRC.VM.OUT BRC.VM.PREVNEXT
              BRC.VM.RESET BRC.VM.RUN)
         (VARS (BRC.MAXIP 30000)
               (* Maximum number of instructions in a program.))
@@ -316,6 +317,23 @@
     (replace (BRC.VM STATE) of VM with 'READY)
     VM])
 
+(BRC.VM.OUT
+  [LAMBDA (VM)                                               (* ; "Edited 26-May-2023 07:11 by PA")
+
+         (* Executes the OUT instruction of the Brainfuck program in virtual machine VM by 
+         printing to the OUT stream of VM the character with code equal to the value at 
+         the memory cell pointed to by the data pointer.
+         No newline is output after the character unless CHARCODE=10.
+         Returns VM.)
+
+    (LET* ((MEMORY (fetch (BRC.VM MEMORY) of VM))
+           (CHARCODE (ELT MEMORY (fetch (BRC.VM DATAPTR) of VM)))
+           (STREAM (fetch (BRC.VM OUT) of VM)))
+          (if (EQ CHARCODE 10)
+              then (TERPRI STREAM)
+            else (PRINTCCODE CHARCODE STREAM))
+          VM])
+
 (BRC.VM.PREVNEXT
   [LAMBDA (VM OPCODE)                                        (* ; "Edited 25-May-2023 03:06 by PA")
 
@@ -357,7 +375,7 @@
     VM])
 
 (BRC.VM.RUN
-  [LAMBDA (VM STEPS)                                         (* ; "Edited 26-May-2023 04:41 by PA")
+  [LAMBDA (VM STEPS)                                         (* ; "Edited 26-May-2023 07:09 by PA")
                                                              (* ; "Edited 21-May-2023 08:38 by PA")
                                                              (* ; "Edited 14-May-2023 10:04 by PA")
                                                              (* ; "Edited  6-May-2023 10:16 by PA")
@@ -399,23 +417,15 @@
                                         then INSTRUCTION
                                       else (fetch (BRANCH MNEMONIC) of INSTRUCTION)))
                      (SETQ PC (fetch (BRC.VM IP) of VM))
-                     (PRINTOUT T "I:" %, I %, "MAXSTEPS" %, MAXSTEPS %, "IP:" %, PC %, "ENDIDX:" %, 
-                            ENDIDX %, "MNEMONIC:" %, .PPV MNEMONIC T)
                      (SELECTQ MNEMONIC
-                         (NEXT (PRINTOUT T "Executing" %, MNEMONIC T)
-                               (BRC.VM.PREVNEXT VM 'NEXT))
-                         (PREV (PRINTOUT T "Executing" %, MNEMONIC T)
-                               (BRC.VM.PREVNEXT VM 'PREV))
-                         (INC (PRINTOUT T "Executing" %, MNEMONIC T)
-                              (BRC.VM.INCDEC VM 'INC))
-                         (DEC (PRINTOUT T "Executing" %, MNEMONIC T)
-                              (BRC.VM.INCDEC VM 'DEC))
+                         (NEXT (BRC.VM.PREVNEXT VM 'NEXT))
+                         (PREV (BRC.VM.PREVNEXT VM 'PREV))
+                         (INC (BRC.VM.INCDEC VM 'INC))
+                         (DEC (BRC.VM.INCDEC VM 'DEC))
                          (IN (PRINTOUT T "Executing" %, MNEMONIC T))
-                         (OUT (PRINTOUT T "Executing" %, MNEMONIC T))
-                         (JZ (PRINTOUT T "Executing" %, MNEMONIC T)
-                             (BRC.VM.BRANCH VM INSTRUCTION))
-                         (JNZ (PRINTOUT T "Executing" %, MNEMONIC T)
-                              (BRC.VM.BRANCH VM INSTRUCTION))
+                         (OUT (BRC.VM.OUT VM))
+                         (JZ (BRC.VM.BRANCH VM INSTRUCTION))
+                         (JNZ (BRC.VM.BRANCH VM INSTRUCTION))
                          NIL)
                      (if (AND STEPS (LEQ I MAXSTEPS))
                          then (SETQ I (ADD1 I)))
@@ -428,9 +438,9 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4062 22860 (BRC.BRANCHP 4072 . 4766) (BRC.MAKE.JNZ 4768 . 6464) (BRC.MAKE.JZ 6466 . 
-7577) (BRC.MAKE.VM 7579 . 8146) (BRC.PARSE 8148 . 11564) (BRC.PARSE.INSTRUCTION 11566 . 12731) (
-BRC.VALIDATE.BRANCHES 12733 . 14252) (BRC.VM.BRANCH 14254 . 15394) (BRC.VM.INCDEC 15396 . 16334) (
-BRC.VM.LOAD 16336 . 16888) (BRC.VM.PREVNEXT 16890 . 17959) (BRC.VM.RESET 17961 . 18990) (BRC.VM.RUN 
-18992 . 22858)))))
+  (FILEMAP (NIL (4108 23106 (BRC.BRANCHP 4118 . 4812) (BRC.MAKE.JNZ 4814 . 6510) (BRC.MAKE.JZ 6512 . 
+7623) (BRC.MAKE.VM 7625 . 8192) (BRC.PARSE 8194 . 11610) (BRC.PARSE.INSTRUCTION 11612 . 12777) (
+BRC.VALIDATE.BRANCHES 12779 . 14298) (BRC.VM.BRANCH 14300 . 15440) (BRC.VM.INCDEC 15442 . 16380) (
+BRC.VM.LOAD 16382 . 16934) (BRC.VM.OUT 16936 . 17739) (BRC.VM.PREVNEXT 17741 . 18810) (BRC.VM.RESET 
+18812 . 19841) (BRC.VM.RUN 19843 . 23104)))))
 STOP
