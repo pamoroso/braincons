@@ -1,13 +1,12 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "25-May-2023 09:18:26" {DSK}<home>medley>il>BRAINCONS.;46 22483  
+(FILECREATED "26-May-2023 04:51:26" {DSK}<home>medley>il>BRAINCONS.;47 22943  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (FNS BRC.VM.RUN BRC.VM.BRANCH)
-                  (VARS BRAINCONSCOMS)
+      :CHANGES-TO (FNS BRC.VM.BRANCH BRC.VM.RUN)
 
-      :PREVIOUS-DATE "25-May-2023 03:07:01" {DSK}<home>medley>il>BRAINCONS.;45)
+      :PREVIOUS-DATE "25-May-2023 09:18:26" {DSK}<home>medley>il>BRAINCONS.;46)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -261,7 +260,7 @@
           ERRORS])
 
 (BRC.VM.BRANCH
-  [LAMBDA (VM BRANCH)                                        (* ; "Edited 25-May-2023 09:07 by PA")
+  [LAMBDA (VM BRANCH)                                        (* ; "Edited 26-May-2023 04:46 by PA")
 
          (* Executes the JZ or JNZ instruction of the Brainfuck program in virtual machine 
          VM depending on the type of BRANCH. Generates IPOUTOFBOUNDS error if the 
@@ -270,9 +269,12 @@
 
     (LET ((NEWIP (fetch (BRANCH DESTINATION) of BRANCH)))
          (if [AND (GEQ NEWIP 0)
-                  (LEQ NEWIP (fetch (BRC.PROGRAM LASTIP) of (fetch (VM PROGRAM) of VM]
-             then (*The fetch-decode-execute cycle will increment IP by 1, so we account for this by
-                        subtracting 1 to the destination address.)
+                  (LEQ NEWIP (fetch (BRC.PROGRAM LASTIP) of (fetch (BRC.VM PROGRAM) of VM]
+             then 
+
+         (* The fetch-decode-execute cycle will increment IP by 1, so we account for this 
+         by subtracting 1 to the destination address.)
+
                   (replace (BRC.VM IP) of VM with (SUB1 NEWIP))
            else (replace (BRC.VM STATE) of VM with (create BRC.ERROR
                                                           REASON _ 'IPOUTOFBOUNDS
@@ -355,7 +357,7 @@
     VM])
 
 (BRC.VM.RUN
-  [LAMBDA (VM STEPS)                                         (* ; "Edited 25-May-2023 09:11 by PA")
+  [LAMBDA (VM STEPS)                                         (* ; "Edited 26-May-2023 04:41 by PA")
                                                              (* ; "Edited 21-May-2023 08:38 by PA")
                                                              (* ; "Edited 14-May-2023 10:04 by PA")
                                                              (* ; "Edited  6-May-2023 10:16 by PA")
@@ -376,12 +378,21 @@
                            'READY)
                (LEQ (fetch (BRC.VM IP) of VM)
                     ENDIDX)
+
+         (* The machine must be READY for the fetch-decode-execute cycle to run.
+         The cycle continues as long as either execution until program end is requested 
+         and there are still instructions, or the requested steps haven't been completed 
+         yet.)
+
                (bind (I _ 1)
                      (MNEMONIC _ NIL)
-                     (PC _ 1) while (OR (AND (NULL STEPS)
-                                             (LEQ (fetch (BRC.VM IP) of VM)
-                                                  ENDIDX))
-                                        (AND STEPS (LEQ I MAXSTEPS)))
+                     (PC _ 1)
+                     (RUNSTATE _ (fetch (BRC.VM STATE) of VM))
+                  while [AND (EQ RUNSTATE 'READY)
+                             (OR (AND (NULL STEPS)
+                                      (LEQ (fetch (BRC.VM IP) of VM)
+                                           ENDIDX))
+                                 (AND STEPS (LEQ I MAXSTEPS]
                   do (SETQ INSTRUCTION (ELT (fetch (BRC.PROGRAM INSTRUCTIONS) of PROGRAM)
                                             (fetch (BRC.VM IP) of VM)))
                      (SETQ MNEMONIC (if (LITATOM INSTRUCTION)
@@ -408,7 +419,8 @@
                          NIL)
                      (if (AND STEPS (LEQ I MAXSTEPS))
                          then (SETQ I (ADD1 I)))
-                     (replace (BRC.VM IP) of VM with (ADD1 PC]
+                     (replace (BRC.VM IP) of VM with (ADD1 PC))
+                     (SETQ RUNSTATE (fetch (BRC.VM STATE) of VM]
           VM])
 )
 
@@ -416,9 +428,9 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4101 22400 (BRC.BRANCHP 4111 . 4805) (BRC.MAKE.JNZ 4807 . 6503) (BRC.MAKE.JZ 6505 . 
-7616) (BRC.MAKE.VM 7618 . 8185) (BRC.PARSE 8187 . 11603) (BRC.PARSE.INSTRUCTION 11605 . 12770) (
-BRC.VALIDATE.BRANCHES 12772 . 14291) (BRC.VM.BRANCH 14293 . 15422) (BRC.VM.INCDEC 15424 . 16362) (
-BRC.VM.LOAD 16364 . 16916) (BRC.VM.PREVNEXT 16918 . 17987) (BRC.VM.RESET 17989 . 19018) (BRC.VM.RUN 
-19020 . 22398)))))
+  (FILEMAP (NIL (4062 22860 (BRC.BRANCHP 4072 . 4766) (BRC.MAKE.JNZ 4768 . 6464) (BRC.MAKE.JZ 6466 . 
+7577) (BRC.MAKE.VM 7579 . 8146) (BRC.PARSE 8148 . 11564) (BRC.PARSE.INSTRUCTION 11566 . 12731) (
+BRC.VALIDATE.BRANCHES 12733 . 14252) (BRC.VM.BRANCH 14254 . 15394) (BRC.VM.INCDEC 15396 . 16334) (
+BRC.VM.LOAD 16336 . 16888) (BRC.VM.PREVNEXT 16890 . 17959) (BRC.VM.RESET 17961 . 18990) (BRC.VM.RUN 
+18992 . 22858)))))
 STOP
