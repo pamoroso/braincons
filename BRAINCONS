@@ -1,12 +1,12 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "26-May-2023 08:20:06" {DSK}<home>medley>il>BRAINCONS.;49 23338  
+(FILECREATED "27-May-2023 02:46:05" {DSK}<home>medley>il>BRAINCONS.;50 23457  
 
       :EDIT-BY "PA"
 
-      :CHANGES-TO (FNS BRC.VM.OUT)
+      :CHANGES-TO (FNS BRC.PARSE.INSTRUCTION)
 
-      :PREVIOUS-DATE "26-May-2023 07:13:12" {DSK}<home>medley>il>BRAINCONS.;48)
+      :PREVIOUS-DATE "26-May-2023 08:20:06" {DSK}<home>medley>il>BRAINCONS.;49)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -214,7 +214,8 @@
           (RETURN PARSED])
 
 (BRC.PARSE.INSTRUCTION
-  [LAMBDA (SRC.CHAR SRC.IDX ADDRESS PROGRAM)                 (* ; "Edited 15-Mar-2023 11:04 by PA")
+  [LAMBDA (SRC.CHAR SRC.IDX ADDRESS PROGRAM)                 (* ; "Edited 27-May-2023 02:44 by PA")
+                                                             (* ; "Edited 15-Mar-2023 11:04 by PA")
                                                              (* ; "Edited  4-Mar-2023 10:34 by PA")
                                                              (* ; "Edited 26-Feb-2023 09:19 by PA")
                                                              (* ; "Edited 21-Feb-2023 11:03 by PA")
@@ -230,8 +231,8 @@
         (< 'PREV)
         (+ 'INC)
         (- 'DEC)
-        (%. 'IN)
-        (%, 'OUT)
+        (%, 'IN)
+        (%. 'OUT)
         (%[ (BRC.MAKE.JZ SRC.IDX ADDRESS PROGRAM))
         (%] (BRC.MAKE.JNZ SRC.IDX ADDRESS PROGRAM))
         NIL])
@@ -442,9 +443,9 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4058 23255 (BRC.BRANCHP 4068 . 4762) (BRC.MAKE.JNZ 4764 . 6460) (BRC.MAKE.JZ 6462 . 
-7573) (BRC.MAKE.VM 7575 . 8142) (BRC.PARSE 8144 . 11560) (BRC.PARSE.INSTRUCTION 11562 . 12727) (
-BRC.VALIDATE.BRANCHES 12729 . 14248) (BRC.VM.BRANCH 14250 . 15390) (BRC.VM.INCDEC 15392 . 16330) (
-BRC.VM.LOAD 16332 . 16884) (BRC.VM.OUT 16886 . 17888) (BRC.VM.PREVNEXT 17890 . 18959) (BRC.VM.RESET 
-18961 . 19990) (BRC.VM.RUN 19992 . 23253)))))
+  (FILEMAP (NIL (4069 23374 (BRC.BRANCHP 4079 . 4773) (BRC.MAKE.JNZ 4775 . 6471) (BRC.MAKE.JZ 6473 . 
+7584) (BRC.MAKE.VM 7586 . 8153) (BRC.PARSE 8155 . 11571) (BRC.PARSE.INSTRUCTION 11573 . 12846) (
+BRC.VALIDATE.BRANCHES 12848 . 14367) (BRC.VM.BRANCH 14369 . 15509) (BRC.VM.INCDEC 15511 . 16449) (
+BRC.VM.LOAD 16451 . 17003) (BRC.VM.OUT 17005 . 18007) (BRC.VM.PREVNEXT 18009 . 19078) (BRC.VM.RESET 
+19080 . 20109) (BRC.VM.RUN 20111 . 23372)))))
 STOP
