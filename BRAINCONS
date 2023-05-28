@@ -1,12 +1,12 @@
 (DEFINE-FILE-INFO PACKAGE "INTERLISP" READTABLE "INTERLISP" BASE 10)
 
-(FILECREATED "27-May-2023 09:59:25" {DSK}<home>medley>il>BRAINCONS.;53 25374  
+(FILECREATED "28-May-2023 08:38:28" {DSK}<home>medley>il>BRAINCONS.;54 25685  
 
       :EDIT-BY "PA"
 
       :CHANGES-TO (FNS BRC.VM.IN)
 
-      :PREVIOUS-DATE "27-May-2023 09:05:39" {DSK}<home>medley>il>BRAINCONS.;52)
+      :PREVIOUS-DATE "27-May-2023 09:59:25" {DSK}<home>medley>il>BRAINCONS.;53)
 
 
 (PRETTYCOMPRINT BRAINCONSCOMS)
@@ -283,25 +283,31 @@
          VM])
 
 (BRC.VM.IN
-  [LAMBDA (VM)                                               (* ; "Edited 27-May-2023 09:55 by PA")
+  [LAMBDA (VM)                                               (* ; "Edited 28-May-2023 08:34 by PA")
 
          (* Executes the IN instruction of the Brainfuck program in virtual machine VM by 
          reading from the IN stream of VM an integer between -128 and 127 inclusive.
-         Valid input is either a single ASCII character, whose code is set as the value of 
-         the current memory cell, or a backslash character immediately followed by an 
+         Returns VM.)
+                                                             (*)
+
+         (* Valid input is either a single ASCII character, whose code is set as the value 
+         of the current memory cell, or a backslash character immediately followed by an 
          optionally signed decimal integer in the designated range, whose code is again 
          set as the value of the current memory cell.
          Any characters that follow valid input are ignored.
-         Returns VM.)
-                                                             (* ; "Edited 27-May-2023 08:59 by PA")
+         Blank input leaves the cell as is.)
+                                                             (* ; "Edited 27-May-2023 08:59 by PA")
     (with BRC.VM VM (LET [(VALUE (bind (RAWINPUT _ NIL)
                                        (INPUTVAL _ NIL)
                                     do (SETQ RAWINPUT (PROMPTFORWORD "Input:" NIL NIL IN))
-                                       (SETQ INPUTVAL (if (STREQUAL (SUBSTRING RAWINPUT 1 1)
+                                       [SETQ INPUTVAL (COND
+                                                         [(STREQUAL (SUBSTRING RAWINPUT 1 1)
                                                                  "\")
-                                                          then (READ (OPENSTRINGSTREAM (SUBSTRING
-                                                                                        RAWINPUT 2)))
-                                                        else (CHCON1 RAWINPUT)))
+                                                          (READ (OPENSTRINGSTREAM (SUBSTRING RAWINPUT
+                                                                                         2]
+                                                         ((NULL RAWINPUT)
+                                                          (ELT MEMORY DATAPTR))
+                                                         (T (CHCON1 RAWINPUT]
                                     repeatuntil (AND (FIXP INPUTVAL)
                                                      (GEQ INPUTVAL -128)
                                                      (LEQ INPUTVAL 127)) finally (RETURN INPUTVAL]
@@ -470,9 +476,9 @@
 
 (RPAQ? BRC.MEMSIZE 30000)
 (DECLARE%: DONTCOPY
-  (FILEMAP (NIL (4068 25291 (BRC.BRANCHP 4078 . 4772) (BRC.MAKE.JNZ 4774 . 6470) (BRC.MAKE.JZ 6472 . 
+  (FILEMAP (NIL (4068 25602 (BRC.BRANCHP 4078 . 4772) (BRC.MAKE.JNZ 4774 . 6470) (BRC.MAKE.JZ 6472 . 
 7583) (BRC.MAKE.VM 7585 . 8152) (BRC.PARSE 8154 . 11570) (BRC.PARSE.INSTRUCTION 11572 . 12845) (
-BRC.VALIDATE.BRANCHES 12847 . 14366) (BRC.VM.BRANCH 14368 . 15508) (BRC.VM.IN 15510 . 17338) (
-BRC.VM.INCDEC 17340 . 18278) (BRC.VM.LOAD 18280 . 18832) (BRC.VM.OUT 18834 . 19836) (BRC.VM.PREVNEXT 
-19838 . 20907) (BRC.VM.RESET 20909 . 21938) (BRC.VM.RUN 21940 . 25289)))))
+BRC.VALIDATE.BRANCHES 12847 . 14366) (BRC.VM.BRANCH 14368 . 15508) (BRC.VM.IN 15510 . 17649) (
+BRC.VM.INCDEC 17651 . 18589) (BRC.VM.LOAD 18591 . 19143) (BRC.VM.OUT 19145 . 20147) (BRC.VM.PREVNEXT 
+20149 . 21218) (BRC.VM.RESET 21220 . 22249) (BRC.VM.RUN 22251 . 25600)))))
 STOP
